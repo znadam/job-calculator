@@ -116,27 +116,41 @@
                         <!-- Annual Total Package -->
                         <div>
                             <label class="block text-sm font-semibold text-apple-primary mb-1">
-                                综合年打包收入 (万/年)
-                                <span class="text-xs font-normal text-apple-secondary block">包含基本工资、年终奖、股票、餐补、五险一金公司部分等</span>
+                                综合年打包收入 (万{{ selectedProvince.currencyName }}/年)
+                                <span class="text-xs font-normal text-apple-secondary block">包含基本工资、年终奖、股票、餐补、五险一金等，以当地货币结算</span>
                             </label>
                             <div class="relative mt-2 rounded-xl shadow-sm">
                                 <input type="number" v-model.number="annualIncome" class="block w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-apple-blue focus:ring-0 py-3 pl-4 pr-24 text-base font-medium">
                                 <div class="pointer-events-none absolute inset-y-0 right-6 flex items-center pr-2">
-                                    <span class="text-gray-500 text-sm">万元/年</span>
+                                    <span class="text-gray-500 text-sm">万{{ selectedProvince.currency }}/年</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Target Percentile & Hourly Wage -->
                         <div>
-                            <label class="block text-sm font-semibold text-apple-primary mb-2">
-                                期望时薪击败全国打工人比例: <span class="text-apple-blue font-bold text-base">{{ targetPercentile }}%</span>
-                                <span class="text-xs font-normal text-apple-secondary block">参考国家统计局全国城镇私营与非私营单位实际工时分布拟合</span>
-                            </label>
-                            <input type="range" min="30" max="99.9" step="0.5" v-model.number="targetPercentile" class="w-full mt-1">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-apple-primary mb-1">工作所在省份/地区</label>
+                                    <select v-model="selectedProvinceIndex" class="block w-full rounded-xl border-gray-200 text-sm focus:border-apple-blue focus:ring-0 py-2.5 px-3 bg-gray-50 font-medium text-apple-primary">
+                                        <option v-for="(prov, idx) in provinces" :key="idx" :value="idx">
+                                            {{ prov.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-apple-primary mb-1">
+                                        期望时薪击败当地比例: <span class="text-apple-blue font-bold text-sm">{{ targetPercentile }}%</span>
+                                    </label>
+                                    <input type="range" min="30" max="99.9" step="0.5" v-model.number="targetPercentile" class="w-full mt-2.5">
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-normal text-apple-secondary block mb-2 leading-tight">
+                                *参考各省市统计局真实城镇私营与非私营单位实际薪资及平均工时，选择特定省市（含港澳台）会自动平差、折算并适配该地区的真实行业薪水与时薪水准。
+                            </span>
                             <div class="text-xs text-apple-secondary bg-gray-50 p-2.5 rounded-xl mt-2 flex justify-between items-center">
-                                <span>🎯 折算期望理想时薪：</span>
-                                <span class="font-bold text-apple-primary text-sm">{{ Math.round(targetHourlyWage) }} 元/小时</span>
+                                <span>🎯 {{ selectedProvince.name }}折算理想期望时薪：</span>
+                                <span class="font-bold text-apple-primary text-sm">{{ selectedProvince.currency }} {{ Math.round(targetHourlyWage) }} / 小时</span>
                             </div>
                         </div>
 
@@ -240,21 +254,21 @@
                                     <input type="checkbox" v-model="freeBreakfast" class="rounded border-gray-300 text-apple-blue focus:ring-apple-blue w-4 h-4 cursor-pointer">
                                     <div>
                                         <span class="text-xs font-bold block">包早餐</span>
-                                        <span class="text-[9px] text-apple-secondary block">日省 ¥15 / 0.3h</span>
+                                        <span class="text-[9px] text-apple-secondary block">日省 {{ selectedProvince.currency }} {{ Math.round(15 / selectedProvince.exchangeRate) }} / 0.3h</span>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 p-3 rounded-xl cursor-pointer transition border border-transparent" :class="{'border-apple-blue bg-blue-50/40': freeLunch}">
                                     <input type="checkbox" v-model="freeLunch" class="rounded border-gray-300 text-apple-blue focus:ring-apple-blue w-4 h-4 cursor-pointer">
                                     <div>
                                         <span class="text-xs font-bold block">包午餐</span>
-                                        <span class="text-[9px] text-apple-secondary block">日省 ¥35 / 0.5h</span>
+                                        <span class="text-[9px] text-apple-secondary block">日省 {{ selectedProvince.currency }} {{ Math.round(35 / selectedProvince.exchangeRate) }} / 0.5h</span>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 p-3 rounded-xl cursor-pointer transition border border-transparent" :class="{'border-apple-blue bg-blue-50/40': freeDinner}">
                                     <input type="checkbox" v-model="freeDinner" class="rounded border-gray-300 text-apple-blue focus:ring-apple-blue w-4 h-4 cursor-pointer">
                                     <div>
                                         <span class="text-xs font-bold block">包晚餐</span>
-                                        <span class="text-[9px] text-apple-secondary block">日省 ¥40 / 0.5h</span>
+                                        <span class="text-[9px] text-apple-secondary block">日省 {{ selectedProvince.currency }} {{ Math.round(40 / selectedProvince.exchangeRate) }} / 0.5h</span>
                                     </div>
                                 </label>
                             </div>
@@ -694,13 +708,53 @@
 
         createApp({
             setup() {
-                // National Bureau of Statistics percentile to hourly wage mapper
-                const getHourlyWageFromPercentile = (p) => {
+                // Provincial Wage statistics (NBS based median hourly wage, currencies & exchange rates to RMB)
+                const provinces = [
+                    { name: '北京', base: 52.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '上海', base: 50.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '天津', base: 36.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '重庆', base: 31.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '广东', base: 40.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '江苏', base: 37.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '浙江', base: 39.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '福建', base: 33.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '山东', base: 30.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '湖北', base: 31.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '湖南', base: 30.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '河北', base: 28.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '河南', base: 26.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '安徽', base: 29.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '江西', base: 27.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '陕西', base: 28.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '四川', base: 29.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '辽宁', base: 29.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '吉林', base: 27.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '黑龙江', base: 26.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '广西', base: 27.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '贵州', base: 26.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '云南', base: 27.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '山西', base: 28.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '甘肃', base: 25.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '青海', base: 29.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '海南', base: 28.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '宁夏', base: 28.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '新疆', base: 29.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '内蒙古', base: 30.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '西藏', base: 32.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 },
+                    { name: '香港', base: 98.0, currency: 'HK$', currencyName: '港币', exchangeRate: 0.93 },
+                    { name: '澳门', base: 85.0, currency: 'MOP$', currencyName: '澳门币', exchangeRate: 0.90 },
+                    { name: '台湾', base: 55.0, currency: 'NT$', currencyName: '新台币', exchangeRate: 0.225 },
+                    { name: '全国平均', base: 32.0, currency: '¥', currencyName: '人民币', exchangeRate: 1.0 }
+                ];
+
+                // National Bureau of Statistics percentile to hourly wage mapper (scaled by province base and converted to local currency!)
+                const getHourlyWageFromPercentile = (p, base, exchangeRate = 1.0) => {
+                    const scale = base / 32.0; // scale relative to national average
                     const pts = [
                         { p: 0, w: 5 },
                         { p: 10, w: 12 },
                         { p: 30, w: 20 },
-                        { p: 50, w: 32 },  // National Median for urban workers
+                        { p: 50, w: 32 },  // National Median is 32
                         { p: 70, w: 55 },
                         { p: 80, w: 85 },  // Top 20%
                         { p: 90, w: 130 }, // Top 10%
@@ -712,16 +766,20 @@
                     for (let i = 0; i < pts.length - 1; i++) {
                         if (p >= pts[i].p && p <= pts[i+1].p) {
                             const ratio = (p - pts[i].p) / (pts[i+1].p - pts[i].p);
-                            return pts[i].w + ratio * (pts[i+1].w - pts[i].w);
+                            const baseWageRMB = (pts[i].w + ratio * (pts[i+1].w - pts[i].w)) * scale;
+                            return baseWageRMB / exchangeRate;
                         }
                     }
-                    return 150;
+                    return (150 * scale) / exchangeRate;
                 };
 
                 // Core Numeric Inputs
-                const annualIncome = ref(10.0); // 万/年
+                const annualIncome = ref(10.0); // 万/年 (in local currency)
+                const selectedProvinceIndex = ref(34); // Default to '全国平均' (index 34)
                 const targetPercentile = ref(80.0); // % (around 85 CNY/hour)
-                const targetHourlyWage = computed(() => getHourlyWageFromPercentile(targetPercentile.value));
+
+                const selectedProvince = computed(() => provinces[selectedProvinceIndex.value]);
+                const targetHourlyWage = computed(() => getHourlyWageFromPercentile(targetPercentile.value, selectedProvince.value.base, selectedProvince.value.exchangeRate));
                 const dailyWorkHours = ref(8.0);
                 const dailyCommuteHours = ref(1.5);
                 const wfhDays = ref(0);
@@ -754,6 +812,7 @@
                         id: 1,
                         name: "我当前的工作 (参考)",
                         annualIncome: 10.0,
+                        selectedProvinceIndex: 34,
                         targetPercentile: 80.0,
                         dailyWorkHours: 8.0,
                         dailyCommuteHours: 1.5,
@@ -778,6 +837,7 @@
                 // Reset back to user's initial real profile
                 const resetToUserDefault = () => {
                     annualIncome.value = 10.0;
+                    selectedProvinceIndex.value = 34;
                     targetPercentile.value = 80.0;
                     dailyWorkHours.value = 8.0;
                     dailyCommuteHours.value = 1.5;
@@ -948,12 +1008,12 @@
                 });
 
                 // Formatting
-                const formatCurrency = (val) => {
-                    return new Intl.NumberFormat('zh-CN', {
-                        style: 'currency',
-                        currency: 'CNY',
+                const formatCurrency = (val, customSymbol = null) => {
+                    const sym = customSymbol || selectedProvince.value.currency;
+                    return sym + ' ' + Number(val).toLocaleString('zh-CN', {
+                        minimumFractionDigits: 1,
                         maximumFractionDigits: 1
-                    }).format(val);
+                    });
                 };
 
                 // Labels Helper Functions
@@ -1006,6 +1066,7 @@
                         id: Date.now(),
                         name: name,
                         annualIncome: annualIncome.value,
+                        selectedProvinceIndex: selectedProvinceIndex.value,
                         targetPercentile: targetPercentile.value,
                         dailyWorkHours: dailyWorkHours.value,
                         dailyCommuteHours: dailyCommuteHours.value,
@@ -1034,7 +1095,8 @@
 
                 const loadSandboxJob = (job) => {
                     annualIncome.value = job.annualIncome;
-                    targetPercentile.value = job.targetPercentile !== undefined ? job.targetPercentile : 91.5;
+                    selectedProvinceIndex.value = job.selectedProvinceIndex !== undefined ? job.selectedProvinceIndex : 34;
+                    targetPercentile.value = job.targetPercentile !== undefined ? job.targetPercentile : 80.0;
                     dailyWorkHours.value = job.dailyWorkHours;
                     dailyCommuteHours.value = job.dailyCommuteHours;
                     wfhDays.value = job.wfhDays !== undefined ? job.wfhDays : 0;
@@ -1060,7 +1122,8 @@
                     const jVacation = job.vacationDays !== undefined ? job.vacationDays : 10;
                     const jHasAcad = job.hasAcademicVacation !== undefined ? job.hasAcademicVacation : false;
                     const jAcadDays = job.academicVacationDays !== undefined ? job.academicVacationDays : 50;
-                    const jPercentile = job.targetPercentile !== undefined ? job.targetPercentile : 91.5;
+                    const jPercentile = job.targetPercentile !== undefined ? job.targetPercentile : 80.0;
+                    const jProvIdx = job.selectedProvinceIndex !== undefined ? job.selectedProvinceIndex : 34;
 
                     const jFreeBreakfast = job.freeBreakfast !== undefined ? job.freeBreakfast : false;
                     const jFreeLunch = job.freeLunch !== undefined ? job.freeLunch : false;
@@ -1073,13 +1136,17 @@
                     const jDailyTotal = job.dailyWorkHours + jEffectiveCommute;
 
                     const totalHours = jDailyTotal * jAnnualWorkDays;
-                    const dailySavings = (jFreeBreakfast ? 15 : 0) + (jFreeLunch ? 35 : 0) + (jFreeDinner ? 40 : 0);
-                    const annualMealsValue = dailySavings * jAnnualWorkDays;
+                    const prov = provinces[jProvIdx];
+
+                    // Meals savings are converted to local currency
+                    const dailySavingsRMB = (jFreeBreakfast ? 15 : 0) + (jFreeLunch ? 35 : 0) + (jFreeDinner ? 40 : 0);
+                    const dailySavingsLocal = dailySavingsRMB / prov.exchangeRate;
+                    const annualMealsValue = dailySavingsLocal * jAnnualWorkDays;
                     const totalIncomeCNY = job.annualIncome * 10000 + annualMealsValue;
 
                     const hourly = totalHours === 0 ? 0 : totalIncomeCNY / totalHours;
 
-                    const jTargetHourlyWage = getHourlyWageFromPercentile(jPercentile);
+                    const jTargetHourlyWage = getHourlyWageFromPercentile(jPercentile, prov.base, prov.exchangeRate);
                     const s1 = Math.min(40, (hourly / jTargetHourlyWage) * 40);
                     const s2 = job.moyuFreedom + job.workFlexibility;
                     const s3 = job.energyDrain + job.lifeBoundary;
@@ -1107,6 +1174,7 @@
                     const jVacation = job.vacationDays !== undefined ? job.vacationDays : 10;
                     const jHasAcad = job.hasAcademicVacation !== undefined ? job.hasAcademicVacation : false;
                     const jAcadDays = job.academicVacationDays !== undefined ? job.academicVacationDays : 50;
+                    const jProvIdx = job.selectedProvinceIndex !== undefined ? job.selectedProvinceIndex : 34;
 
                     const jFreeBreakfast = job.freeBreakfast !== undefined ? job.freeBreakfast : false;
                     const jFreeLunch = job.freeLunch !== undefined ? job.freeLunch : false;
@@ -1119,11 +1187,14 @@
                     const jDailyTotal = job.dailyWorkHours + jEffectiveCommute;
 
                     const totalHours = jDailyTotal * jAnnualWorkDays;
-                    const dailySavings = (jFreeBreakfast ? 15 : 0) + (jFreeLunch ? 35 : 0) + (jFreeDinner ? 40 : 0);
-                    const annualMealsValue = dailySavings * jAnnualWorkDays;
-                    const totalIncomeCNY = job.annualIncome * 10000 + annualMealsValue;
+                    const prov = provinces[jProvIdx];
 
-                    return totalHours === 0 ? 0 : totalIncomeCNY / totalHours;
+                    const dailySavingsRMB = (jFreeBreakfast ? 15 : 0) + (jFreeLunch ? 35 : 0) + (jFreeDinner ? 40 : 0);
+                    const dailySavingsLocal = dailySavingsRMB / prov.exchangeRate;
+                    const annualMealsValue = dailySavingsLocal * jAnnualWorkDays;
+                    const totalIncomeLocal = job.annualIncome * 10000 + annualMealsValue;
+
+                    return totalHours === 0 ? 0 : totalIncomeLocal / totalHours;
                 };
 
                 const scrollToScore = () => {
@@ -1135,7 +1206,10 @@
 
                 return {
                     annualIncome,
+                    selectedProvinceIndex,
                     targetPercentile,
+                    provinces,
+                    selectedProvince,
                     targetHourlyWage,
                     dailyWorkHours,
                     dailyCommuteHours,
