@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作性价比打分器 (100分制)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        apple: {
+                            bg: '#f5f5f7',
+                            card: '#ffffff',
+                            primary: '#1d1d1f',
+                            secondary: '#86868b',
+                            blue: '#0071e3',
+                            green: '#34c759',
+                            orange: '#ff9500',
+                            red: '#ff3b30'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        /* Custom range slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #e5e5ea;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0071e3;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+    <div id="app" class="max-w-6xl mx-auto" v-cloak>
+        <!-- Header -->
+        <header class="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-apple-primary flex items-center justify-center md:justify-start gap-2">
+                    <i class="fa-solid fa-calculator text-apple-blue"></i>
+                    工作性价比科学打分器
+                </h1>
+                <p class="text-apple-secondary mt-1">基于时薪与生命掌控权的量化分析工具</p>
+            </div>
+            <div class="flex justify-center gap-2">
+                <button @click="resetToUserDefault" class="px-4 py-2 text-sm bg-apple-bg hover:bg-gray-200 border border-gray-300 rounded-full font-medium transition duration-200">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>重置为我的指标
+                </button>
+                <button @click="showTheoryModal = true" class="px-4 py-2 text-sm bg-apple-blue text-white hover:bg-blue-600 rounded-full font-medium transition duration-200 shadow-sm">
+                    <i class="fa-solid fa-book mr-1"></i>打分算法逻辑
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Left Side: Inputs -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- User Friendly Advisory Banner (New) -->
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 leading-relaxed flex gap-3">
+                    <i class="fa-solid fa-circle-info text-apple-blue text-base mt-0.5"></i>
+                    <div>
+                        <strong class="block mb-1 text-sm font-bold text-blue-950">💡 科学打分温馨提示</strong>
+                        <ul class="list-disc list-inside space-y-1 text-blue-900/90">
+                            <li><strong>期望击败比例</strong>：此项纯根据您的<b>主观意愿</b>设定，拖动时可直观看到您心仪的时薪在全社会的排位水平。</li>
+                            <li><strong>其他硬/软性选项</strong>：请务必根据<b>工作的实际情况真实填写</b>，这样才能算出最契合现实、最具参考价值的性价比分数。</li>
+                            <li>本工具所产出的计算结论及社会排位，<b>仅供娱乐和个人职业规划参考</b>。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Card 1: 核心硬性指标 (时薪计算器) -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-8 h-8 rounded-full bg-blue-50 text-apple-blue flex items-center justify-center font-bold text-sm">1</span>
+                        <h2 class="text-lg font-bold text-apple-primary">核心硬性指标（时薪性价比：40分）</h2>
+                    </div>
+                    <p class="text-xs text-apple-secondary mb-4 leading-relaxed">
+                        *时薪将折算您的综合年总包，并除以加上通勤时间后的年度总工作小时数。时薪达到或超过您的期望目标，即可拿满 40 分。
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Annual Total Package -->
+                        <div>
+                            <label class="block text-sm font-semibold text-apple-primary mb-1">
+                                综合年打包收入 (万/年)
+                                <span class="text-xs font-normal text-apple-secondary block">包含基本工资、年终奖、股票、餐补、五险一金公司部分等</span>
+                            </label>
+                            <div class="relative mt-2 rounded-xl shadow-sm">
+                                <input type="number" v-model.number="annualIncome" class="block w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-apple-blue focus:ring-0 py-3 px-4 text-base font-medium">
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                                    <span class="text-gray-500 text-sm">万元/年</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Target Percentile & Hourly Wage -->
+                        <div>
+                            <label class="block text-sm font-semibold text-apple-primary mb-2">
+                                期望时薪击败全国打工人比例: <span class="text-apple-blue font-bold text-base">{{ targetPercentile }}%</span>
+                                <span class="text-xs font-normal text-apple-secondary block">参考国家统计局全国城镇私营与非私营单位实际工时分布拟合</span>
+                            </label>
+                            <input type="range" min="30" max="99.9" step="0.5" v-model.number="targetPercentile" class="w-full mt-1">
+                            <div class="text-xs text-apple-secondary bg-gray-50 p-2.5 rounded-xl mt-2 flex justify-between items-center">
+                                <span>🎯 折算期望理想时薪：</span>
+                                <span class="font-bold text-apple-primary text-sm">{{ Math.round(targetHourlyWage) }} 元/小时</span>
+                            </div>
+                        </div>
+
+                        <!-- Daily Work Hours -->
+                        <div>
+                            <label class="block text-sm font-semibold text-apple-primary mb-2">
+                                日均在岗时间: <span class="text-apple-blue font-bold text-base">{{ dailyWorkHours }} 小时</span>
+                                <span class="text-xs font-normal text-apple-secondary block">每日实际在工位或实验室的时间（非打卡时间）</span>
+                            </label>
+                            <input type="range" min="4" max="16" step="0.5" v-model.number="dailyWorkHours" class="w-full mt-1">
+                        </div>
+
+                        <!-- Daily Commute Hours -->
+                        <div>
+                            <label class="block text-sm font-semibold text-apple-primary mb-2">
+                                每日单日总通勤: <span class="text-apple-blue font-bold text-base">{{ dailyCommuteHours }} 小时</span>
+                                <span class="text-xs font-normal text-apple-secondary block">从出门到公司，以及下班回家所消耗的总时间</span>
+                            </label>
+                            <input type="range" min="0" max="5" step="0.1" v-model.number="dailyCommuteHours" class="w-full mt-1">
+                        </div>
+
+                        <!-- Weekly WFH Days -->
+                        <div>
+                            <label class="block text-sm font-semibold text-apple-primary mb-2">
+                                每周居家办公 (WFH): <span class="text-apple-blue font-bold text-base">{{ wfhDays }} 天</span>
+                                <span class="text-xs font-normal text-apple-secondary block">每周可以在家远程办公的天数（直接免去通勤时间）</span>
+                            </label>
+                            <input type="range" min="0" max="5" step="1" v-model.number="wfhDays" class="w-full mt-1">
+                        </div>
+
+                        <!-- Annual Vacation Days -->
+                        <div>
+                            <label class="block text-sm font-semibold text-apple-primary mb-2">
+                                年度带薪常规年假: <span class="text-apple-blue font-bold text-base">{{ vacationDays }} 天</span>
+                                <span class="text-xs font-normal text-apple-secondary block">除了11天国家法定假外，公司提供的带薪常规年假天数</span>
+                            </label>
+                            <input type="range" min="0" max="40" step="1" v-model.number="vacationDays" class="w-full mt-1">
+                        </div>
+
+                        <!-- Academic / Teacher Vacations -->
+                        <div class="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 flex flex-col justify-center">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-semibold text-apple-primary block">学校/教师岗位 (有寒暑假)</label>
+                                    <span class="text-[11px] text-apple-secondary block">开启后可额外录入连续的长假天数</span>
+                                </div>
+                                <input type="checkbox" v-model="hasAcademicVacation" class="rounded border-gray-300 text-apple-blue focus:ring-apple-blue w-5 h-5 cursor-pointer">
+                            </div>
+                            <div v-if="hasAcademicVacation" class="mt-4 pt-4 border-t border-gray-100 animate-fadeIn">
+                                <label class="block text-xs font-semibold text-apple-primary mb-2">
+                                    寒暑假总日历天数: <span class="text-apple-blue font-bold text-sm">{{ academicVacationDays }} 天</span>
+                                    <span class="text-[10px] font-normal text-apple-secondary block">系统会自动乘以 5/7 换算为净工作日，避免与已扣除的周末重复计算。</span>
+                                </label>
+                                <input type="range" min="10" max="90" step="1" v-model.number="academicVacationDays" class="w-full">
+                            </div>
+                        </div>
+
+                        <!-- Calculations Feedback Indicators -->
+                        <div class="md:col-span-2 bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50 flex flex-col md:flex-row justify-between gap-4 text-xs">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-car text-apple-blue text-base"></i>
+                                <div>
+                                    <span class="text-apple-secondary block">折算每日平均通勤</span>
+                                    <span class="text-sm font-bold text-apple-primary">{{ Math.round(effectiveDailyCommute * 10) / 10 }} 小时</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-day text-apple-blue text-base"></i>
+                                <div>
+                                    <span class="text-apple-secondary block">年度总带薪假</span>
+                                    <span class="text-sm font-bold text-apple-primary">{{ totalVacationDays }} 天 <span class="text-[10px] font-normal text-apple-secondary">(不含法定法定假)</span></span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-briefcase text-apple-blue text-base"></i>
+                                <div>
+                                    <span class="text-apple-secondary block">折算年度实际工作日</span>
+                                    <span class="text-sm font-bold text-apple-primary">{{ annualWorkDays }} 天/年 <span class="text-[10px] font-normal text-apple-secondary">(标准250天扣除年假)</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 1.5: 隐藏福利与实际搬砖时间修正 (新增) -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-8 h-8 rounded-full bg-blue-50 text-apple-blue flex items-center justify-center font-bold text-sm">1.5</span>
+                        <h2 class="text-lg font-bold text-apple-primary">隐藏福利与实际搬砖时间修正</h2>
+                    </div>
+                    <p class="text-xs text-apple-secondary mb-4 leading-relaxed">
+                        *包三餐不仅直接节省餐饮开支，更省下买菜做饭时间；而上班健身、洗澡和摸鱼，本质上是用公司的钱打理个人生活，变相缩短了你的“实际劳动付出时间”。
+                    </p>
+
+                    <div class="space-y-5">
+                        <!-- Free Meals Checkboxes -->
+                        <div>
+                            <span class="block text-sm font-semibold text-apple-primary mb-2">免费餐饮福利（折算纯省钱与省时间）：</span>
+                            <div class="grid grid-cols-3 gap-3">
+                                <label class="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 p-3 rounded-xl cursor-pointer transition border border-transparent" :class="{'border-apple-blue bg-blue-50/40': freeBreakfast}">
+                                    <input type="checkbox" v-model="freeBreakfast" class="rounded border-gray-300 text-apple-blue focus:ring-apple-blue w-4 h-4 cursor-pointer">
+                                    <div>
+                                        <span class="text-xs font-bold block">包早餐</span>
+                                        <span class="text-[9px] text-apple-secondary block">日省 ¥15 / 0.3h</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 p-3 rounded-xl cursor-pointer transition border border-transparent" :class="{'border-apple-blue bg-blue-50/40': freeLunch}">
+                                    <input type="checkbox" v-model="freeLunch" class="rounded border-gray-300 text-apple-blue focus:ring-apple-blue w-4 h-4 cursor-pointer">
+                                    <div>
+                                        <span class="text-xs font-bold block">包午餐</span>
+                                        <span class="text-[9px] text-apple-secondary block">日省 ¥35 / 0.5h</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 p-3 rounded-xl cursor-pointer transition border border-transparent" :class="{'border-apple-blue bg-blue-50/40': freeDinner}">
+                                    <input type="checkbox" v-model="freeDinner" class="rounded border-gray-300 text-apple-blue focus:ring-apple-blue w-4 h-4 cursor-pointer">
+                                    <div>
+                                        <span class="text-xs font-bold block">包晚餐</span>
+                                        <span class="text-[9px] text-apple-secondary block">日省 ¥40 / 0.5h</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Gym and Shower hours -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary flex items-center gap-1">
+                                    <span>在公司洗澡与健身运动:</span>
+                                    <span class="text-apple-blue font-bold text-sm">{{ gymShowerHours }} 小时/天</span>
+                                </label>
+                            </div>
+                            <input type="range" min="0" max="2" step="0.1" v-model.number="gymShowerHours" class="w-full">
+                            <span class="text-[10px] text-apple-secondary block mt-1">💡 利用工作在岗时间运动健身、洗澡，直接省去家用水电煤气并挽回个人生活时间。</span>
+                        </div>
+
+                        <!-- Daily Moyu hours -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary flex items-center gap-1">
+                                    <span>每日实际摸鱼/处理私事:</span>
+                                    <span class="text-apple-blue font-bold text-sm">{{ dailyMoyuHours }} 小时/天</span>
+                                </label>
+                            </div>
+                            <input type="range" min="0" max="6" step="0.5" v-model.number="dailyMoyuHours" class="w-full">
+                            <span class="text-[10px] text-apple-secondary block mt-1">💡 上班期间刷论坛、交易理财、计划生活等不属于纯体力/脑力搬砖的时间。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: 软性时间与自由度 (20分) -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-8 h-8 rounded-full bg-blue-50 text-apple-blue flex items-center justify-center font-bold text-sm">2</span>
+                        <h2 class="text-lg font-bold text-apple-primary">时间掌控权与灵活度（20分）</h2>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Moyu Freedom -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary">上班摸鱼与处理私事自由度 (10分)</label>
+                                <span class="text-apple-blue font-bold text-sm">{{ moyuFreedom }} / 10</span>
+                            </div>
+                            <input type="range" min="1" max="10" step="1" v-model.number="moyuFreedom" class="w-full mb-1">
+                            <div class="text-xs text-apple-secondary bg-gray-50 p-2 rounded-lg mt-1 italic">
+                                💡 当前级别：{{ getMoyuLabel(moyuFreedom) }}
+                            </div>
+                        </div>
+
+                        <!-- Work Flexibility -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary">弹性上下班与 WFH 政策 (10分)</label>
+                                <span class="text-apple-blue font-bold text-sm">{{ workFlexibility }} / 10</span>
+                            </div>
+                            <input type="range" min="1" max="10" step="1" v-model.number="workFlexibility" class="w-full mb-1">
+                            <div class="text-xs text-apple-secondary bg-gray-50 p-2 rounded-lg mt-1 italic">
+                                💡 当前级别：{{ getFlexLabel(workFlexibility) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: 身心精力损耗 (20分) -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-8 h-8 rounded-full bg-blue-50 text-apple-blue flex items-center justify-center font-bold text-sm">3</span>
+                        <h2 class="text-lg font-bold text-apple-primary">精力损耗与生活边界（20分）</h2>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Energy Retention -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary">工作轻松度（精力余量） (10分)</label>
+                                <span class="text-apple-blue font-bold text-sm">{{ energyDrain }} / 10</span>
+                            </div>
+                            <input type="range" min="1" max="10" step="1" v-model.number="energyDrain" class="w-full mb-1">
+                            <div class="text-xs text-apple-secondary bg-gray-50 p-2 rounded-lg mt-1 italic">
+                                💡 当前级别：{{ getEnergyLabel(energyDrain) }}
+                            </div>
+                        </div>
+
+                        <!-- Life Boundary -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary">下班生活边界（不受打扰度） (10分)</label>
+                                <span class="text-apple-blue font-bold text-sm">{{ lifeBoundary }} / 10</span>
+                            </div>
+                            <input type="range" min="1" max="10" step="1" v-model.number="lifeBoundary" class="w-full mb-1">
+                            <div class="text-xs text-apple-secondary bg-gray-50 p-2 rounded-lg mt-1 italic">
+                                💡 当前级别：{{ getBoundaryLabel(lifeBoundary) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: 综合保障与未来价值 (20分) -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-8 h-8 rounded-full bg-blue-50 text-apple-blue flex items-center justify-center font-bold text-sm">4</span>
+                        <h2 class="text-lg font-bold text-apple-primary">保障福利与未来杠杆（20分）</h2>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Benefits & Security -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary">公司保障、公积金与稳定性 (10分)</label>
+                                <span class="text-apple-blue font-bold text-sm">{{ benefitsSecurity }} / 10</span>
+                            </div>
+                            <input type="range" min="1" max="10" step="1" v-model.number="benefitsSecurity" class="w-full mb-1">
+                            <div class="text-xs text-apple-secondary bg-gray-50 p-2 rounded-lg mt-1 italic">
+                                💡 当前级别：{{ getBenefitsLabel(benefitsSecurity) }}
+                            </div>
+                        </div>
+
+                        <!-- Resume Leverage -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm font-semibold text-apple-primary">履历背书与未来跳槽成长杠杆 (10分)</label>
+                                <span class="text-apple-blue font-bold text-sm">{{ resumeLeverage }} / 10</span>
+                            </div>
+                            <input type="range" min="1" max="10" step="1" v-model.number="resumeLeverage" class="w-full mb-1">
+                            <div class="text-xs text-apple-secondary bg-gray-50 p-2 rounded-lg mt-1 italic">
+                                💡 当前级别：{{ getResumeLabel(resumeLeverage) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side: Dashboard & Results -->
+            <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-4 h-fit">
+
+                <!-- Score Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 text-center relative overflow-hidden">
+                    <div class="absolute top-0 inset-x-0 h-2" :class="scoreColorClass"></div>
+
+                    <span class="text-xs font-bold uppercase tracking-wider text-apple-secondary">当前工作性价比综合评分</span>
+
+                    <!-- Score Circle representation with plain typography -->
+                    <div class="my-6">
+                        <span class="text-8xl font-extrabold tracking-tighter" :class="scoreTextClass">
+                            {{ Math.round(totalScore) }}
+                        </span>
+                        <span class="text-xl font-medium text-apple-secondary">/ 100</span>
+                    </div>
+
+                    <!-- Work Label Tag -->
+                    <div class="inline-block px-4 py-2 rounded-full font-bold text-sm mb-4" :class="scoreTagClass">
+                        {{ scoreEvaluation.tag }}
+                    </div>
+
+                    <!-- Evaluation Text -->
+                    <p class="text-sm font-medium text-apple-primary px-4 leading-relaxed mb-6">
+                        “{{ scoreEvaluation.desc }}”
+                    </p>
+
+                    <!-- Real Hourly Rate Meter -->
+                    <div class="border-t border-b border-gray-100 py-4 my-4 grid grid-cols-2 gap-4">
+                        <div class="border-r border-gray-100">
+                            <span class="text-xs text-apple-secondary block">核算生命售出时薪</span>
+                            <span class="text-xl font-extrabold text-apple-primary mt-1 block">
+                                {{ formatCurrency(calculatedHourlyWage) }} <span class="text-xs font-normal">/ 小时</span>
+                            </span>
+                            <span class="text-[9px] text-apple-secondary block mt-0.5">（总年薪 / 占用生命总时间）</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-apple-secondary block text-apple-green font-bold">
+                                <i class="fa-solid fa-mug-hot mr-0.5"></i>纯搬砖付出时薪
+                            </span>
+                            <span class="text-xl font-extrabold text-apple-green mt-1 block">
+                                {{ formatCurrency(grindHourlyWage) }} <span class="text-xs font-normal">/ 小时</span>
+                            </span>
+                            <span class="text-[9px] text-apple-secondary block mt-0.5">（扣除摸鱼/健身后的实际劳动）</span>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Perks Dynamic Feedback Panel -->
+                    <div class="bg-gray-50 rounded-2xl p-3 text-xs text-left space-y-2 mb-4 border border-gray-100" v-if="annualMealsValue > 0 || dailyPersonalTimeReclaimed > 0">
+                        <div class="font-bold text-apple-primary flex justify-between">
+                            <span>🎁 隐藏福利与摸鱼红利折算：</span>
+                            <span class="text-apple-blue">真实利益提升</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] text-apple-secondary pt-1 border-t border-gray-200/50">
+                            <div v-if="annualMealsValue > 0">
+                                <i class="fa-solid fa-cookie-bite text-apple-orange mr-1"></i>
+                                餐饮年省：<strong class="text-apple-primary">{{ formatCurrency(annualMealsValue) }}</strong>
+                            </div>
+                            <div v-if="dailyPersonalTimeReclaimed > 0">
+                                <i class="fa-solid fa-hourglass-start text-apple-blue mr-1"></i>
+                                日挽回时间：<strong class="text-apple-primary">{{ Math.round(dailyPersonalTimeReclaimed * 10) / 10 }}h / 天</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-b border-gray-100 pb-4 mb-4 grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-xs text-apple-secondary block">每日工作+通勤总耗时</span>
+                            <span class="text-base font-bold mt-1 block" :class="dailyTotalCommitment > 9.0 ? 'text-apple-red' : 'text-apple-primary'">
+                                {{ Math.round(dailyTotalCommitment * 10) / 10 }} 小时 <span class="text-xs font-normal text-apple-secondary" v-if="dailyTotalCommitment > 9.0">(超负荷)</span>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-apple-secondary block">每日纯纯搬砖时间</span>
+                            <span class="text-base font-bold text-apple-primary mt-1 block">
+                                {{ Math.round(actualGrindHours * 10) / 10 }} 小时/天
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Death line absolute trigger -->
+                    <div class="text-xs text-left text-white bg-black p-3 rounded-xl mb-4 font-bold border border-gray-900 flex items-center gap-2 animate-pulse" v-if="dailyTotalCommitment >= 19.2">
+                        <i class="fa-solid fa-skull-crossbones text-apple-red text-base"></i>
+                        <div>
+                            <span class="block">🚨 绝对生存红线崩溃警告！</span>
+                            <span class="text-[10px] font-normal text-gray-400">每日工作与通勤耗时已达 {{ Math.round(dailyTotalCommitment * 10) / 10 }} 小时，超过每周 996 折算的生理死亡线（19.2小时/天）。在此极限状态下，您将面临猝死风险，<b>任何金钱补偿一律失效，综合评分一票否决归零</b>。</span>
+                        </div>
+                    </div>
+
+                    <!-- Money Compensation Active Badge -->
+                    <div class="text-xs text-left text-yellow-800 bg-yellow-50 border border-yellow-200 p-2.5 rounded-xl mb-4" v-if="moneyCompensationRatio > 0 && dailyTotalCommitment < 19.2 && dailyTotalCommitment > 9.0">
+                        <i class="fa-solid fa-coins mr-1 text-yellow-600"></i>
+                        <strong>💰 钞能力疲惫对冲特权已生效！</strong><br>
+                        <span class="text-[11px] block mt-0.5 text-yellow-700">当前年薪已超期望理想年薪的 <b>{{ Math.round((adjustedAnnualIncome / (targetHourlyWage * 8 * 250)) * 10) / 10 }} 倍</b>。系统已自动调动“高薪资本”，为你对冲抵消了 <b>{{ Math.round(moneyCompensationRatio * 100) }}%</b> 的过度加班扣分惩罚！</span>
+                    </div>
+
+                    <div class="text-xs text-left text-apple-red bg-red-50 border border-red-100 p-2.5 rounded-xl mb-4" v-if="survivalMultiplier < 1.0 && survivalMultiplier > 0.0 && dailyTotalCommitment < 19.2">
+                        <i class="fa-solid fa-heart-pulse mr-1"></i>
+                        <strong>生命健康折损警告</strong>：每日用于工作的总时长已达 <strong>{{ Math.round(dailyTotalCommitment * 10) / 10 }} 小时</strong>。由于过度剥夺睡眠与自主生活，该工作的总体评分已被强制健康扣分 <strong>{{ Math.round((1 - survivalMultiplier) * 100) }}%</strong><span v-if="moneyCompensationRatio > 0">（已通过钞能力减免）</span>。
+                    </div>
+
+                    <!-- Radar-like dimension bar charts -->
+                    <div class="space-y-3 text-left mt-6">
+                        <h4 class="text-xs font-bold text-apple-secondary uppercase tracking-wider">各维度得分细账</h4>
+
+                        <!-- Dim 1 -->
+                        <div>
+                            <div class="flex justify-between text-xs font-medium text-apple-primary mb-1">
+                                <span>1. 真实时薪得分</span>
+                                <span class="font-bold">{{ Math.round(hourlyWageScore * 10) / 10 }} / 40</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-apple-blue h-full rounded-full transition-all duration-300" :style="{ width: (hourlyWageScore / 40 * 100) + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <!-- Dim 2 -->
+                        <div>
+                            <div class="flex justify-between text-xs font-medium text-apple-primary mb-1">
+                                <span>2. 时间掌控权</span>
+                                <span class="font-bold">{{ moyuFreedom + workFlexibility }} / 20</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-purple-500 h-full rounded-full transition-all duration-300" :style="{ width: ((moyuFreedom + workFlexibility) / 20 * 100) + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <!-- Dim 3 -->
+                        <div>
+                            <div class="flex justify-between text-xs font-medium text-apple-primary mb-1">
+                                <span>3. 精力损耗度</span>
+                                <span class="font-bold">{{ energyDrain + lifeBoundary }} / 20</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-teal-500 h-full rounded-full transition-all duration-300" :style="{ width: ((energyDrain + lifeBoundary) / 20 * 100) + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <!-- Dim 4 -->
+                        <div>
+                            <div class="flex justify-between text-xs font-medium text-apple-primary mb-1">
+                                <span>4. 保障与未来</span>
+                                <span class="font-bold">{{ benefitsSecurity + resumeLeverage }} / 20</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-indigo-500 h-full rounded-full transition-all duration-300" :style="{ width: ((benefitsSecurity + resumeLeverage) / 20 * 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compare Sandbox Panel -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-base font-bold text-apple-primary mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-code-compare text-apple-blue"></i>
+                        多份工作对比沙盒 (PK 模拟器)
+                    </h3>
+                    <p class="text-xs text-apple-secondary mb-4">
+                        您可以把当前的评分配置保存下来，然后去左边调节修改成另一份“假想 Offer”的参数，进行横向性价比对决！
+                    </p>
+
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <input type="text" v-model="sandboxName" placeholder="给当前的打分命名，如：当前苹果岗位..." class="flex-1 rounded-xl border-gray-300 text-sm focus:border-apple-blue focus:ring-0 py-2 px-3 bg-gray-50">
+                            <button @click="saveToSandbox" class="px-4 py-2 text-sm bg-apple-primary text-white hover:bg-black rounded-xl font-semibold transition duration-150">
+                                保存此快照
+                            </button>
+                        </div>
+
+                        <!-- Saved List -->
+                        <div class="space-y-2 max-h-48 overflow-y-auto mt-4 pr-1" v-if="savedJobs.length > 0">
+                            <div v-for="(job, index) in savedJobs" :key="job.id" class="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition duration-150">
+                                <div class="text-left">
+                                    <span class="text-sm font-bold text-apple-primary block">{{ job.name }}</span>
+                                    <span class="text-xs text-apple-secondary">
+                                        {{ job.annualIncome }}万 | {{ job.dailyWorkHours }}h | {{ Math.round(calculateHourlyWageForJob(job)) }}元/小时
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 bg-white border border-gray-200 text-apple-primary font-bold text-sm rounded-lg">
+                                        {{ Math.round(calculateScoreForJob(job)) }}分
+                                    </span>
+                                    <button @click="loadSandboxJob(job)" class="p-1.5 text-apple-blue hover:bg-blue-100 rounded-lg transition" title="载入编辑">
+                                        <i class="fa-solid fa-folder-open"></i>
+                                    </button>
+                                    <button @click="deleteSandboxJob(job.id)" class="p-1.5 text-apple-red hover:bg-red-100 rounded-lg transition" title="删除">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Theory Modal -->
+        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-all duration-200" v-if="showTheoryModal">
+            <div class="bg-white rounded-3xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto shadow-2xl">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                    <h3 class="text-lg font-bold text-apple-primary">🧠 工作性价比计算器算法设计逻辑</h3>
+                    <button @click="showTheoryModal = false" class="text-apple-secondary hover:text-apple-primary text-xl">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="text-sm leading-relaxed text-apple-primary space-y-4 text-left">
+                    <p class="font-semibold text-apple-blue">核心数学模型：综合年收入和生命时间成本的比率结算。</p>
+
+                    <h4 class="font-bold border-l-4 border-apple-blue pl-2 text-apple-primary">1. 真实时薪计算公式（融合假期、居家办公与餐饮折算）</h4>
+                    <p class="text-apple-secondary">
+                        本工具创造性地将<b>带薪假天数</b>、<b>居家办公 (WFH)</b> 以及<b>包三餐等隐性财务福利</b>直接融入核心硬性时薪公式，实现底层数据的优雅穿透：
+                    </p>
+                    <div class="bg-apple-bg p-3 rounded-xl font-mono text-xs">
+                        餐饮福利日省金额 = (包早餐? 15 : 0) + (包午餐? 35 : 0) + (包晚餐? 40 : 0)<br>
+                        餐饮福利年省金额 = 餐饮日省 * 实际年工作日<br>
+                        调整后年打包综合年薪 = 原年打包收入 + 餐饮福利年省金额（免税纯省）<br><br>
+                        实际年工作日 = 250天(标准工作日) - 年度带薪年假天数<br>
+                        折算日均通勤 = 往返通勤时间 * (1 - 每周WFH天数 / 5)<br>
+                        每日生命占用时间 = 每日在岗时间 + 折算日均通勤<br>
+                        年度生命占用总工时 = 实际年工作日 * 每日生命占用时间<br>
+                        核算生命售出时薪 = 调整后年打包综合年薪 / 年度生命占用总工时
+                    </div>
+                    <p class="text-xs text-apple-secondary">
+                        *这意味着：餐饮等免税省钱福利会被<b>直接折算进年薪分盘中，大幅拉高你的“生命售出时薪”</b>。
+                    </p>
+
+                    <h4 class="font-bold border-l-4 border-apple-blue pl-2 text-apple-primary">1.5 “纯搬砖付出时薪”与时间挽回逻辑</h4>
+                    <p class="text-apple-secondary">
+                        为了还原打工人最真实的体感，我们推出了<b>“纯搬砖付出时薪”</b>指标：
+                    </p>
+                    <div class="bg-apple-bg p-3 rounded-xl font-mono text-xs">
+                        日挽回个人时间 = 在公司运动洗澡时间 + 摸鱼/处理私事时间 + 餐饮省下的备餐家务时间(每个包餐约0.2-0.3h)<br>
+                        每日纯纯搬砖时间 = 每日在岗时间 - 运动洗澡时间 - 摸鱼时间<br>
+                        纯搬砖付出时薪 = 调整后年打包综合年薪 / (每日纯纯搬砖时间 * 实际年工作日)
+                    </div>
+                    <p class="text-xs text-apple-secondary">
+                        *这意味着：如果你在上班时间高强度摸鱼、在公司健身房撸铁、洗好澡再回家，虽然你的生命占用时间没变，但你<b>实际用于劳动搬砖的付出时间被极大压缩</b>。系统会通过“纯搬砖付出时薪”给你一个极其震撼且解气的“真实劳动报酬率”反馈，让你拥有极高的时间自主获得感！
+                    </p>
+
+                    <h4 class="font-bold border-l-4 border-apple-blue pl-2 text-apple-primary">2. 硬性指标得分与“健康惩罚因子”</h4>
+                    <p class="text-apple-secondary">
+                        真实时薪得分根据实际时薪与期望时薪的比率计算，但为了杜绝“低要求、高折损”的算法漏洞，我们引入了<b>生命健康折损惩罚因子（Survival Penalty Multiplier）</b>：
+                    </p>
+                    <div class="bg-apple-bg p-3 rounded-xl font-mono text-xs">
+                        日总工时系数 = 日均工作时间 + 往返总通勤时间<br>
+                        当 日总工时系数 &le; 9小时：不惩罚（乘数 = 1.0）<br>
+                        当 9小时 &lt; 日总工时系数 &le; 20小时：启动渐进惩罚，公式为 Math.pow(1 - (日总工时 - 9) / 11, 1.2)<br>
+                        当 日总工时系数 &ge; 20小时：评分强制直接归零（100% 剥夺）
+                    </div>
+                    <p class="text-xs text-apple-secondary">
+                        *这意味着：一个日总耗时 12 小时的岗位（即使薪酬达标）由于生理局限，总评分会被健康乘数扣掉大约 30%；16 小时折损系数更恐怖（降至 30% 分数附近）；而达到 20 小时（接近人类生存极限）时，哪怕给再多钱、期望薪资设得再低，<b>总分都将被一票否决降为 0 分</b>，真实反映生命的承载极限。
+                    </p>
+
+                    <h4 class="font-bold border-l-4 border-apple-blue pl-2 text-apple-primary">3. 软性维度加分逻辑 (三大维度，各满分 20 分)</h4>
+                    <ul class="list-disc list-inside space-y-2 text-apple-secondary">
+                        <li><strong class="text-apple-primary">时间掌控权 (20分)</strong>：由“上班摸鱼自由(10分)”与“上下班弹性WFH(10分)”之和计算。衡量的是你在名义工作时间里，多大程度上能为自己所用。</li>
+                        <li><strong class="text-apple-primary">精力损耗度 (20分)</strong>：由“工作轻松度(10分)”和“下班生活边界(10分)”之和计算。工作如果对精力造成毁灭性榨干，即使下班自由，剩余的时间也没有高质量价值。</li>
+                        <li><strong class="text-apple-primary">保障与未来 (20分)</strong>：由“综合保障公积金(10分)”和“履历背书与未来跳槽杠杆(10分)”之和计算。确保打分体系不仅关注眼前，还考虑到对抗未来失业风险的能力。</li>
+                    </ul>
+
+                    <h4 class="font-bold border-l-4 border-apple-blue pl-2 text-apple-primary">4. 性价比等级划分</h4>
+                    <ul class="space-y-1 text-xs text-apple-secondary">
+                        <li><span class="font-bold text-apple-green">🏆 得分 > 80: “神仙岗位”</span> - 拥有无与伦比的自主时间比例或极高时薪，生活与工作的黄金平衡。</li>
+                        <li><span class="font-bold text-apple-blue">🥈 得分 70-80: “真中产舒适岗”</span> - 整体性价比较佳，无过度内耗，且能保障品质生活。</li>
+                        <li><span class="font-bold text-apple-orange">🥉 得分 60-70: “性价比平平”</span> - 优缺点分明，通常用大量的加班/高强度/高通勤，来换取差强人意的薪水。</li>
+                        <li><span class="font-bold text-apple-red">⚠️ 得分 < 60: “牛马大军警告”</span> - 时薪低于预期，生命时间被工作严重剥夺，且伴随高强度精神损耗与微弱保障。</li>
+                    </ul>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button @click="showTheoryModal = false" class="px-5 py-2 bg-apple-primary hover:bg-black text-white rounded-xl font-semibold text-sm transition">
+                        我了解了
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script Section -->
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+        createApp({
+            setup() {
+                // National Bureau of Statistics percentile to hourly wage mapper
+                const getHourlyWageFromPercentile = (p) => {
+                    const pts = [
+                        { p: 0, w: 5 },
+                        { p: 10, w: 12 },
+                        { p: 30, w: 20 },
+                        { p: 50, w: 32 },  // National Median for urban workers
+                        { p: 70, w: 55 },
+                        { p: 80, w: 85 },  // Top 20%
+                        { p: 90, w: 130 }, // Top 10%
+                        { p: 95, w: 185 }, // Top 5%
+                        { p: 98, w: 280 }, // Top 2%
+                        { p: 99, w: 420 }, // Top 1%
+                        { p: 100, w: 1200 }
+                    ];
+                    for (let i = 0; i < pts.length - 1; i++) {
+                        if (p >= pts[i].p && p <= pts[i+1].p) {
+                            const ratio = (p - pts[i].p) / (pts[i+1].p - pts[i].p);
+                            return pts[i].w + ratio * (pts[i+1].w - pts[i].w);
+                        }
+                    }
+                    return 150;
+                };
+
+                // Core Numeric Inputs
+                const annualIncome = ref(32.5); // 万/年
+                const targetPercentile = ref(91.5); // % (around 150 CNY/hour)
+                const targetHourlyWage = computed(() => getHourlyWageFromPercentile(targetPercentile.value));
+                const dailyWorkHours = ref(8.0);
+                const dailyCommuteHours = ref(1.5);
+                const wfhDays = ref(0);
+                const vacationDays = ref(10);
+                const hasAcademicVacation = ref(false);
+                const academicVacationDays = ref(50);
+
+                // Hidden Perks & Moyu
+                const freeBreakfast = ref(false);
+                const freeLunch = ref(false);
+                const freeDinner = ref(false);
+                const gymShowerHours = ref(0.0);
+                const dailyMoyuHours = ref(0.0);
+
+                // Qualitative Sliders (1 to 10 scale)
+                const moyuFreedom = ref(8);
+                const workFlexibility = ref(6);
+                const energyDrain = ref(8);
+                const lifeBoundary = ref(8);
+                const benefitsSecurity = ref(9);
+                const resumeLeverage = ref(9);
+
+                // UI control
+                const showTheoryModal = ref(false);
+                const sandboxName = ref('');
+
+                // Saved items for sandbox
+                const savedJobs = ref([
+                    {
+                        id: 1,
+                        name: "我当前的工作 (参考)",
+                        annualIncome: 32.5,
+                        targetPercentile: 91.5,
+                        dailyWorkHours: 8.0,
+                        dailyCommuteHours: 1.5,
+                        wfhDays: 0,
+                        vacationDays: 10,
+                        hasAcademicVacation: false,
+                        academicVacationDays: 50,
+                        freeBreakfast: false,
+                        freeLunch: false,
+                        freeDinner: false,
+                        gymShowerHours: 0.0,
+                        dailyMoyuHours: 0.0,
+                        moyuFreedom: 8,
+                        workFlexibility: 6,
+                        energyDrain: 8,
+                        lifeBoundary: 8,
+                        benefitsSecurity: 9,
+                        resumeLeverage: 9
+                    }
+                ]);
+
+                // Reset back to user's initial real profile
+                const resetToUserDefault = () => {
+                    annualIncome.value = 32.5;
+                    targetPercentile.value = 91.5;
+                    dailyWorkHours.value = 8.0;
+                    dailyCommuteHours.value = 1.5;
+                    wfhDays.value = 0;
+                    vacationDays.value = 10;
+                    hasAcademicVacation.value = false;
+                    academicVacationDays.value = 50;
+                    freeBreakfast.value = false;
+                    freeLunch.value = false;
+                    freeDinner.value = false;
+                    gymShowerHours.value = 0.0;
+                    dailyMoyuHours.value = 0.0;
+                    moyuFreedom.value = 8;
+                    workFlexibility.value = 6;
+                    energyDrain.value = 8;
+                    lifeBoundary.value = 8;
+                    benefitsSecurity.value = 9;
+                    resumeLeverage.value = 9;
+                };
+
+                // Calculations
+                const totalVacationDays = computed(() => {
+                    // Academic vacations are calendar days. We multiply by 5/7 to get net working days, preventing weekend double-counting!
+                    const academicWorkingDays = hasAcademicVacation.value ? Math.round(academicVacationDays.value * 5 / 7) : 0;
+                    return vacationDays.value + academicWorkingDays;
+                });
+
+                const annualWorkDays = computed(() => {
+                    // Standard working days is 250, we subtract total vacations
+                    return Math.max(50, 250 - totalVacationDays.value);
+                });
+
+                const effectiveDailyCommute = computed(() => {
+                    // WFH days reduce commuting. E.g. if WFH 2 days out of 5, you only commute 3 days (60%)
+                    return dailyCommuteHours.value * (1 - wfhDays.value / 5.0);
+                });
+
+                const dailyTotalCommitment = computed(() => {
+                    return dailyWorkHours.value + effectiveDailyCommute.value;
+                });
+
+                const annualTotalHours = computed(() => {
+                    return Math.round(dailyTotalCommitment.value * annualWorkDays.value);
+                });
+
+                // Financial equivalent of free meals (untaxed savings)
+                const annualMealsValue = computed(() => {
+                    const dailySavings = (freeBreakfast.value ? 15 : 0) + (freeLunch.value ? 35 : 0) + (freeDinner.value ? 40 : 0);
+                    return dailySavings * annualWorkDays.value;
+                });
+
+                const adjustedAnnualIncome = computed(() => {
+                    return annualIncome.value * 10000 + annualMealsValue.value;
+                });
+
+                // Money Compensation Factor
+                const moneyCompensationRatio = computed(() => {
+                    // Ideal annual package is targetHourlyWage * 8 * 250 (standard hours is 2000 per year)
+                    const idealAnnualIncome = targetHourlyWage.value * 8 * 250;
+                    if (idealAnnualIncome === 0) return 0;
+                    const multiple = adjustedAnnualIncome.value / idealAnnualIncome;
+                    if (multiple <= 2.0) return 0.0;
+                    // Every 1x above 2x grants 10% fatigue offset, capped at 80% (0.8)
+                    return Math.min(0.8, (multiple - 2.0) * 0.1);
+                });
+
+                // Human Survival Multiplier (Health & Time Drain Penalty)
+                const survivalMultiplier = computed(() => {
+                    const t = dailyTotalCommitment.value;
+                    // Absolute redline is 19.2 hours (24h - 4.8h sleep limit)
+                    if (t >= 19.2) return 0.0;
+                    if (t <= 9.0) return 1.0;
+                    const ratio = (t - 9.0) / 10.2; // Scales 0 to 1 as t goes from 9 to 19.2
+                    // Quadratic decay base
+                    const baseMultiplier = Math.max(0, 1 - Math.pow(ratio, 2));
+                    // Compensated multiplier by money power!
+                    return baseMultiplier + (1 - baseMultiplier) * moneyCompensationRatio.value;
+                });
+
+                const calculatedHourlyWage = computed(() => {
+                    if (annualTotalHours.value === 0) return 0;
+                    return adjustedAnnualIncome.value / annualTotalHours.value;
+                });
+
+                // Reclaimed personal time (Moyu, Gym, Shower, Eating time saved)
+                const dailyPersonalTimeReclaimed = computed(() => {
+                    // Having breakfast, lunch, or dinner at work also saves time that would be spent cooking/washing (approx 0.2h per meal)
+                    const mealTimeSaved = (freeBreakfast.value ? 0.2 : 0) + (freeLunch.value ? 0.3 : 0) + (freeDinner.value ? 0.3 : 0);
+                    return gymShowerHours.value + dailyMoyuHours.value + mealTimeSaved;
+                });
+
+                const actualGrindHours = computed(() => {
+                    return Math.max(0.5, dailyWorkHours.value - dailyMoyuHours.value - gymShowerHours.value);
+                });
+
+                const grindHourlyWage = computed(() => {
+                    const annualGrindHours = actualGrindHours.value * annualWorkDays.value;
+                    if (annualGrindHours === 0) return 0;
+                    return adjustedAnnualIncome.value / annualGrindHours;
+                });
+
+                // Calculate Dimension 1 (Hourly Wage Score - Max 40)
+                const hourlyWageScore = computed(() => {
+                    if (targetHourlyWage.value === 0) return 0;
+                    const score = (calculatedHourlyWage.value / targetHourlyWage.value) * 40;
+                    return Math.min(40, score);
+                });
+
+                // Overall Score (out of 100)
+                const totalScore = computed(() => {
+                    const s1 = hourlyWageScore.value; // Max 40
+                    const s2 = moyuFreedom.value + workFlexibility.value; // Max 20
+                    const s3 = energyDrain.value + lifeBoundary.value; // Max 20
+                    const s4 = benefitsSecurity.value + resumeLeverage.value; // Max 20
+                    const raw = s1 + s2 + s3 + s4;
+                    return Math.min(100, Math.max(0, raw * survivalMultiplier.value));
+                });
+
+                // Rating and description text based on score
+                const scoreEvaluation = computed(() => {
+                    const val = Math.round(totalScore.value);
+                    if (val >= 80) {
+                        return {
+                            tag: '🏆 神仙工作 (极高性价比)',
+                            desc: '这份工作简直是生命恩赐！极高的时薪回报、完美的精力保留、极佳的生活边界。您成功掌控了自己的生命时间，继续保持！'
+                        };
+                    } else if (val >= 70) {
+                        return {
+                            tag: '🥈 真中产舒适岗 (良好性价比)',
+                            desc: '非常体面且安逸的舒适岗位。工作强度和时间安排合理，抗风险保障到位。偶尔有小累，但整体生活支配度很高。'
+                        };
+                    } else if (val >= 60) {
+                        return {
+                            tag: '🥉 性价比一般 (勉强度日)',
+                            desc: '一份典型的平庸工作。也许薪水还可以，但通勤、隐形加班或精力内耗正在慢慢吞噬你的自由。如果有更好的去处，可以开始规划了。'
+                        };
+                    } else {
+                        return {
+                            tag: '⚠️ 纯牛马警告 (低性价比深渊)',
+                            desc: '警报拉响！这份工作的单位时间价值（时薪）已经极低，还伴随着可怕的精力压榨和不稳定的保障，生命在被无情消耗，建议火速寻求改变。'
+                        };
+                    }
+                });
+
+                // Color classes reactive to score
+                const scoreColorClass = computed(() => {
+                    const val = totalScore.value;
+                    if (val >= 80) return 'bg-apple-green';
+                    if (val >= 70) return 'bg-apple-blue';
+                    if (val >= 60) return 'bg-apple-orange';
+                    return 'bg-apple-red';
+                });
+
+                const scoreTextClass = computed(() => {
+                    const val = totalScore.value;
+                    if (val >= 80) return 'text-apple-green';
+                    if (val >= 70) return 'text-apple-blue';
+                    if (val >= 60) return 'text-apple-orange';
+                    return 'text-apple-red';
+                });
+
+                const scoreTagClass = computed(() => {
+                    const val = totalScore.value;
+                    if (val >= 80) return 'bg-green-50 text-apple-green border border-green-200';
+                    if (val >= 70) return 'bg-blue-50 text-apple-blue border border-blue-200';
+                    if (val >= 60) return 'bg-orange-50 text-apple-orange border border-orange-200';
+                    return 'bg-red-50 text-apple-red border border-red-200';
+                });
+
+                // Formatting
+                const formatCurrency = (val) => {
+                    return new Intl.NumberFormat('zh-CN', {
+                        style: 'currency',
+                        currency: 'CNY',
+                        maximumFractionDigits: 1
+                    }).format(val);
+                };
+
+                // Labels Helper Functions
+                const getMoyuLabel = (val) => {
+                    if (val >= 9) return '神仙摸鱼：上班能去银行/看病/买咖啡，绝不被监控';
+                    if (val >= 7) return '闲时自由：能刷刷网页、回私人微信，主管不微观管理';
+                    if (val >= 5) return '忙里偷闲：偶尔能回回私人微信，其余时间必须在工位';
+                    return '严格监控：连去厕所都被会计时，无任何摸鱼可能';
+                };
+
+                const getFlexLabel = (val) => {
+                    if (val >= 9) return '极度弹性：100% 居家办公(WFH)，随时来随时走';
+                    if (val >= 7) return '混合办公：每周可居家 WFH 1-3 天，或者弹性不打卡';
+                    if (val >= 5) return '固定打卡：上下班时间固定，但有少量迟到宽限期';
+                    return '严苛打卡：差一分钟扣钱，请假层层审批，极其繁琐';
+                };
+
+                const getEnergyLabel = (val) => {
+                    if (val >= 9) return '精力充沛：极度轻松，下班后还能健身/搞副业/丰富生活';
+                    if (val >= 7) return '微累即恢复：正常工作强度，下班有点小累但很快能恢复';
+                    if (val >= 5) return '脑力透支：高强度动脑，下班只想躺平，周末基本都在补觉';
+                    return '严重内耗：精神长期处于压抑高压状态，白天累，晚上失眠';
+                };
+
+                const getBoundaryLabel = (val) => {
+                    if (val >= 9) return '完美失联：下班完全属于自己，周末及节假日绝对不回工作';
+                    if (val >= 7) return '轻微打扰：偶尔有紧急信息要回，大概耗时 5 分钟';
+                    if (val >= 5) return '隐形待命：下班仍需一直留意群消息，偶尔需要电脑处理';
+                    return '地狱 On-Call：24小时高压待命，周末深夜随时可能被叫醒';
+                };
+
+                const getBenefitsLabel = (val) => {
+                    if (val >= 9) return '大厂顶配：足额顶格公积金 + 完美商保(包家人) + 极高稳定性';
+                    if (val >= 7) return '保障健全：足额缴纳五险一金 + 正常补充商保';
+                    if (val >= 5) return '普通标准：按照社保最低标准交五险一金，福利薄弱';
+                    return '几乎无保障：无公积金，拖欠工资常客，随时面临被裁且无补偿';
+                };
+
+                const getResumeLabel = (val) => {
+                    if (val >= 9) return '金字招牌：行业翘楚/顶尖大厂核心项目，未来跳槽溢价极高';
+                    if (val >= 7) return '稳定增值：知名企业，核心技术/业务，简历稳步增值';
+                    if (val >= 5) return '普通拧螺丝：业务偏边缘，技术成长一般，背书效果普通';
+                    return '贬值陷阱：夕阳行业或声誉较差的企业，简历减分项';
+                };
+
+                // Sandbox actions
+                const saveToSandbox = () => {
+                    const name = sandboxName.value.trim() || `快照工作 (${savedJobs.value.length + 1})`;
+                    savedJobs.value.push({
+                        id: Date.now(),
+                        name: name,
+                        annualIncome: annualIncome.value,
+                        targetPercentile: targetPercentile.value,
+                        dailyWorkHours: dailyWorkHours.value,
+                        dailyCommuteHours: dailyCommuteHours.value,
+                        wfhDays: wfhDays.value,
+                        vacationDays: vacationDays.value,
+                        hasAcademicVacation: hasAcademicVacation.value,
+                        academicVacationDays: academicVacationDays.value,
+                        freeBreakfast: freeBreakfast.value,
+                        freeLunch: freeLunch.value,
+                        freeDinner: freeDinner.value,
+                        gymShowerHours: gymShowerHours.value,
+                        dailyMoyuHours: dailyMoyuHours.value,
+                        moyuFreedom: moyuFreedom.value,
+                        workFlexibility: workFlexibility.value,
+                        energyDrain: energyDrain.value,
+                        lifeBoundary: lifeBoundary.value,
+                        benefitsSecurity: benefitsSecurity.value,
+                        resumeLeverage: resumeLeverage.value
+                    });
+                    sandboxName.value = '';
+                };
+
+                const deleteSandboxJob = (id) => {
+                    savedJobs.value = savedJobs.value.filter(job => job.id !== id);
+                };
+
+                const loadSandboxJob = (job) => {
+                    annualIncome.value = job.annualIncome;
+                    targetPercentile.value = job.targetPercentile !== undefined ? job.targetPercentile : 91.5;
+                    dailyWorkHours.value = job.dailyWorkHours;
+                    dailyCommuteHours.value = job.dailyCommuteHours;
+                    wfhDays.value = job.wfhDays !== undefined ? job.wfhDays : 0;
+                    vacationDays.value = job.vacationDays !== undefined ? job.vacationDays : 10;
+                    hasAcademicVacation.value = job.hasAcademicVacation !== undefined ? job.hasAcademicVacation : false;
+                    academicVacationDays.value = job.academicVacationDays !== undefined ? job.academicVacationDays : 50;
+                    freeBreakfast.value = job.freeBreakfast !== undefined ? job.freeBreakfast : false;
+                    freeLunch.value = job.freeLunch !== undefined ? job.freeLunch : false;
+                    freeDinner.value = job.freeDinner !== undefined ? job.freeDinner : false;
+                    gymShowerHours.value = job.gymShowerHours !== undefined ? job.gymShowerHours : 0.0;
+                    dailyMoyuHours.value = job.dailyMoyuHours !== undefined ? job.dailyMoyuHours : 0.0;
+                    moyuFreedom.value = job.moyuFreedom;
+                    workFlexibility.value = job.workFlexibility;
+                    energyDrain.value = job.energyDrain;
+                    lifeBoundary.value = job.lifeBoundary;
+                    benefitsSecurity.value = job.benefitsSecurity;
+                    resumeLeverage.value = job.resumeLeverage;
+                };
+
+                // Helper to calculate score for a specific saved job config
+                const calculateScoreForJob = (job) => {
+                    const jWfh = job.wfhDays !== undefined ? job.wfhDays : 0;
+                    const jVacation = job.vacationDays !== undefined ? job.vacationDays : 10;
+                    const jHasAcad = job.hasAcademicVacation !== undefined ? job.hasAcademicVacation : false;
+                    const jAcadDays = job.academicVacationDays !== undefined ? job.academicVacationDays : 50;
+                    const jPercentile = job.targetPercentile !== undefined ? job.targetPercentile : 91.5;
+
+                    const jFreeBreakfast = job.freeBreakfast !== undefined ? job.freeBreakfast : false;
+                    const jFreeLunch = job.freeLunch !== undefined ? job.freeLunch : false;
+                    const jFreeDinner = job.freeDinner !== undefined ? job.freeDinner : false;
+
+                    const jAcadWorkingDays = jHasAcad ? Math.round(jAcadDays * 5 / 7) : 0;
+                    const jTotalVacation = jVacation + jAcadWorkingDays;
+                    const jAnnualWorkDays = Math.max(50, 250 - jTotalVacation);
+                    const jEffectiveCommute = job.dailyCommuteHours * (1 - jWfh / 5.0);
+                    const jDailyTotal = job.dailyWorkHours + jEffectiveCommute;
+
+                    const totalHours = jDailyTotal * jAnnualWorkDays;
+                    const dailySavings = (jFreeBreakfast ? 15 : 0) + (jFreeLunch ? 35 : 0) + (jFreeDinner ? 40 : 0);
+                    const annualMealsValue = dailySavings * jAnnualWorkDays;
+                    const totalIncomeCNY = job.annualIncome * 10000 + annualMealsValue;
+
+                    const hourly = totalHours === 0 ? 0 : totalIncomeCNY / totalHours;
+
+                    const jTargetHourlyWage = getHourlyWageFromPercentile(jPercentile);
+                    const s1 = Math.min(40, (hourly / jTargetHourlyWage) * 40);
+                    const s2 = job.moyuFreedom + job.workFlexibility;
+                    const s3 = job.energyDrain + job.lifeBoundary;
+                    const s4 = job.benefitsSecurity + job.resumeLeverage;
+                    const raw = s1 + s2 + s3 + s4;
+
+                    let survivalMult = 1.0;
+                    if (jDailyTotal >= 19.2) {
+                        survivalMult = 0.0;
+                    } else if (jDailyTotal > 9.0) {
+                        const ratio = (jDailyTotal - 9.0) / 10.2;
+                        const baseMultiplier = Math.max(0, 1 - Math.pow(ratio, 2));
+
+                        const jIdealAnnual = jTargetHourlyWage * 8 * 250;
+                        const jMultiple = jIdealAnnual === 0 ? 0 : totalIncomeCNY / jIdealAnnual;
+                        const jCompFactor = jMultiple <= 2.0 ? 0.0 : Math.min(0.8, (jMultiple - 2.0) * 0.1);
+
+                        survivalMult = baseMultiplier + (1 - baseMultiplier) * jCompFactor;
+                    }
+                    return Math.min(100, Math.max(0, raw * survivalMult));
+                };
+
+                const calculateHourlyWageForJob = (job) => {
+                    const jWfh = job.wfhDays !== undefined ? job.wfhDays : 0;
+                    const jVacation = job.vacationDays !== undefined ? job.vacationDays : 10;
+                    const jHasAcad = job.hasAcademicVacation !== undefined ? job.hasAcademicVacation : false;
+                    const jAcadDays = job.academicVacationDays !== undefined ? job.academicVacationDays : 50;
+
+                    const jFreeBreakfast = job.freeBreakfast !== undefined ? job.freeBreakfast : false;
+                    const jFreeLunch = job.freeLunch !== undefined ? job.freeLunch : false;
+                    const jFreeDinner = job.freeDinner !== undefined ? job.freeDinner : false;
+
+                    const jAcadWorkingDays = jHasAcad ? Math.round(jAcadDays * 5 / 7) : 0;
+                    const jTotalVacation = jVacation + jAcadWorkingDays;
+                    const jAnnualWorkDays = Math.max(50, 250 - jTotalVacation);
+                    const jEffectiveCommute = job.dailyCommuteHours * (1 - jWfh / 5.0);
+                    const jDailyTotal = job.dailyWorkHours + jEffectiveCommute;
+
+                    const totalHours = jDailyTotal * jAnnualWorkDays;
+                    const dailySavings = (jFreeBreakfast ? 15 : 0) + (jFreeLunch ? 35 : 0) + (jFreeDinner ? 40 : 0);
+                    const annualMealsValue = dailySavings * jAnnualWorkDays;
+                    const totalIncomeCNY = job.annualIncome * 10000 + annualMealsValue;
+
+                    return totalHours === 0 ? 0 : totalIncomeCNY / totalHours;
+                };
+
+                return {
+                    annualIncome,
+                    targetPercentile,
+                    targetHourlyWage,
+                    dailyWorkHours,
+                    dailyCommuteHours,
+                    wfhDays,
+                    vacationDays,
+                    hasAcademicVacation,
+                    academicVacationDays,
+
+                    freeBreakfast,
+                    freeLunch,
+                    freeDinner,
+                    gymShowerHours,
+                    dailyMoyuHours,
+
+                    moyuFreedom,
+                    workFlexibility,
+                    energyDrain,
+                    lifeBoundary,
+                    benefitsSecurity,
+                    resumeLeverage,
+                    showTheoryModal,
+                    sandboxName,
+                    savedJobs,
+
+                    totalVacationDays,
+                    annualWorkDays,
+                    effectiveDailyCommute,
+                    annualTotalHours,
+                    dailyTotalCommitment,
+                    survivalMultiplier,
+                    moneyCompensationRatio,
+                    annualMealsValue,
+                    adjustedAnnualIncome,
+                    calculatedHourlyWage,
+                    dailyPersonalTimeReclaimed,
+                    actualGrindHours,
+                    grindHourlyWage,
+                    hourlyWageScore,
+                    totalScore,
+                    scoreEvaluation,
+                    scoreColorClass,
+                    scoreTextClass,
+                    scoreTagClass,
+
+                    formatCurrency,
+                    resetToUserDefault,
+                    getMoyuLabel,
+                    getFlexLabel,
+                    getEnergyLabel,
+                    getBoundaryLabel,
+                    getBenefitsLabel,
+                    getResumeLabel,
+                    saveToSandbox,
+                    deleteSandboxJob,
+                    loadSandboxJob,
+                    calculateScoreForJob,
+                    calculateHourlyWageForJob
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
